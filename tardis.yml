@@ -6,21 +6,20 @@
 # 3. Travis can have multiple travel plans inside one folder
 # 
 #
-	# This is the initial folder where the defined 
-	# travel plan will be checked out.
+# This is the initial folder where the defined 
+# travel plan will be checked out.
+#
 plan: database
- 	- name: erfurt-2014-R45
- 		image: postgres
-  	 	version: latest # latest docker image
-  	git: git@github.com:codechimp/postgres-integration.git
-    	version: commit-id
-    	checkpoint: initial setup  # current checkpoint
- 	- name: brieselang-2015-R01
-	  type: zalando/postgres
-	    version: 9.1 # Brieselang is still not updated
-	  git: git@github.com:codechimp/postgres-data.git
-	    version: commit-id
-	    checkpoint: live-dump
+- name: erfurt-2014-R45
+	image: postgres
+		version: latest # latest docker image
+	git: git@github.com:codechimp/postgres-integration.git
+		checkpoint: initial setup  # current checkpoint
+- name: brieselang-2015-R01
+	type: zalando/postgres
+		version: 9.1 # Brieselang is still not updated
+	git: git@github.com:codechimp/postgres-data.git
+		checkpoint: live-dump
 
 
 #	there is 
