@@ -22,6 +22,15 @@ plan: database
 		checkpoint: live-dump
 
 
+# This plan results in the next data structure:
+#
+# database
+# |-- brieselang-2015-R01
+# |   `-- postgres-data
+# `-- erfurt-2014-R45
+#    `-- postgres-data
+
+
 #	there is 
 # tardis configure
 # tardis save <checkpoint>
