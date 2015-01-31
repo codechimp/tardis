@@ -1,0 +1,34 @@
+---
+#
+# This is an example of a Tardis Yaml configuration file.
+# 1. Travis works with travel plans.
+# 2. A travel plan is A git repository which contains multiple checkpoints.
+# 3. Travis can have multiple travel plans inside one folder
+# 
+#
+- tardis:
+		# This is the initial folder where the defined 
+		# travel plan will be checked out.
+		plan: databse
+	  	- name: erfurt-2014-R45
+	  		image: postgres
+		  	 	version: latest # latest docker image
+		  	git: git@github.com:codechimp/postgres-integration.git
+		    	version: commit-id
+		    	checkpoint: initial setup  # current checkpoint
+	  	- name: brieselang-2015-R01
+			  type: zalando/postgres
+			    version: 9.1 # Brieselang is still not updated
+			  git: git@github.com:codechimp/postgres-data.git
+			    version: commit-id
+			    checkpoint: live-dump
+			  folder: postgres-data-94
+
+
+#	there is 
+# tardis configure
+# tardis save <checkpoint>
+# tardis travel-to <checkpoint>
+# tardis travel-back
+# tardis list
+# tardis switch
