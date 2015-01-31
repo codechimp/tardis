@@ -21,6 +21,14 @@ def configure(docker_image):
 
 
 @cli.command()
+@click.option('--config_path', help='path to tardis config file', default='.')
+def run(config_path):
+    """
+    Runs your local DB image according to tardis configuration
+    """
+    print('run ' + config_path)
+
+@cli.command()
 @click.option('--checkpoint', help='name of the checkpoint representing the current DB state')
 def save(checkpoint):
     """
