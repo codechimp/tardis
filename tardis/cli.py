@@ -1,4 +1,6 @@
 import click
+from docker import Client
+from docker.utils import kwargs_from_env
 
 @click.group()
 def cli():
@@ -26,7 +28,39 @@ def run(config_path):
     """
     Runs your local DB image according to tardis configuration
     """
-    print('run ' + config_path)
+    
+    docker_image = 'postgres:9.4.0'
+    host_data_directory = '/tmp/postgres'
+    docker_port = 5432
+
+    POSTGRES_DATA_MOUNT = '/var/lib/postgresql/data'
+    POSTGRES_USER = 'postgres'
+    POSTGRES_PASSWORD= 'postgres'
+
+    # c = Client(base_url='unix://var/run/docker.sock')
+    # worakaround for boot2docker
+    kwargs = kwargs_from_env()
+    kwargs['tls'].assert_hostname = False
+    client = Client(**kwargs)
+
+    container = client.create_container(docker_image, environment = { 'POSTGRES_USER': POSTGRES_USER, 
+                                                                      'POSTGRES_PASSWORD': POSTGRES_PASSWORD })
+
+    container_id = container.get('Id')
+    click.echo('created container for image {}. continer id is {}'.format(docker_image, container_id))
+
+    response = client.start(container = container_id, 
+                            binds = { 
+                                        host_data_directory:
+                                        {
+                                            'bind': POSTGRES_DATA_MOUNT,
+                                            'ro': False
+                                        }
+                                    },
+                            port_bindings = { 5432: docker_port } )
+    click.echo('container is started')
+
+
 
 @cli.command()
 @click.option('--checkpoint', help='name of the checkpoint representing the current DB state')
