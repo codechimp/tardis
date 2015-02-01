@@ -53,13 +53,6 @@ def create_docker_client():
 def configure():
     """
     Configure your local Postgres Docker image
-
-    TODO
-    - postgres version
-    -port
-    -image pull
-    -data folder location
-    -config name
     """
 
     config = load_configuration()
