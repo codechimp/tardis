@@ -79,7 +79,7 @@ $ psql --username=postgres --host=localhost --port=5432  -c "select * from test"
 
 # if I think about it, I do need some test data
 $ python3 -m tardis travel-to --travel-plan=first_try --checkpoint=initial_test_data
-ZALANDO-5196:tardis bfriedrich$ psql --username=postgres --host=localhost --port=5432  -c "select * from test"
+$ psql --username=postgres --host=localhost --port=5432  -c "select * from test"
  id | description
 ----+-------------
   1 | test1
