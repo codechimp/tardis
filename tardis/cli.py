@@ -157,7 +157,11 @@ def list():
     """
     Lists all checkpoints
     """
-    print('list')
+    # TODO mark current checkpoint
+    repo = git.repo.base.Repo(path=host_data_directory)
+    [print(tag) for tag in repo.tags]
+
+
 
 
 def main():
