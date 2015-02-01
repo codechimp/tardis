@@ -10,14 +10,14 @@
 # travel plan will be checked out.
 #
 plan: database
-- name: erfurt-2014-R45
+- name: travel_plan_a-2014
 	image: postgres
 		version: latest # latest docker image
 	git: git@github.com:codechimp/postgres-integration.git
 		checkpoint: initial setup  # current checkpoint
-- name: brieselang-2015-R01
+- name: travel_plan_b-2014
 	type: zalando/postgres
-		version: 9.1 # Brieselang is still not updated
+		version: 9.1
 	git: git@github.com:codechimp/postgres-data.git
 		checkpoint: live-dump
 
@@ -25,9 +25,9 @@ plan: database
 # This plan results in the next data structure:
 #
 # database
-# |-- brieselang-2015-R01
+# |-- travel_plan_a-2014
 # |   `-- postgres-data
-# `-- erfurt-2014-R45
+# `-- travel_plan_b-2014
 #    `-- postgres-data
 
 
