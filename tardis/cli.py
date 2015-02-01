@@ -70,8 +70,6 @@ def run(config_path):
     container_id = container.get('Id')
     dump_to_session_data({ 'container_id' : container_id })
 
-    ok('created container for image {}. continer id is {}'.format(docker_image, container_id))
-
     response = client.start(container = container_id, 
                             binds = { 
                                         host_data_directory:
@@ -81,7 +79,8 @@ def run(config_path):
                                         }
                                     },
                             port_bindings = { 5432: docker_port } )
-    ok('container is started')
+
+    ok('started container {}'.format(container_id))
 
 
 def is_dirty():
@@ -123,11 +122,26 @@ def save(checkpoint):
 
 @cli.command('travel-to')
 @click.option('--checkpoint', help='name of the checkpoint representing the DB state you want to switch to')
-def travel_to(checkpoint):
+@click.pass_context
+def travel_to(ctx, checkpoint):
     """
     Sets DB state back to state saved in the target checkpoint 
     """
-    print('travel-to ' + checkpoint)
+    docker_client = create_docker_client();
+    session_data = load_session_data()
+    container_id = session_data['container_id']
+
+    docker_client.stop(container_id)
+    ok('stopped container {}'.format(container_id))
+
+    git_cmd = git.Git(host_data_directory)
+    git_cmd.checkout('tags/{}'.format(checkpoint))
+    ok('travelled back to {}'.format(checkpoint))
+    
+    # FIXME we need to reuse the same config path as we did in 'travis run'
+    ctx.invoke(run)
+
+
 
 
 @cli.command('travel-back')
