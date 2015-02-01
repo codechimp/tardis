@@ -4,7 +4,9 @@ from docker.utils import kwargs_from_env
 import json
 import git
 from tardis.utils import ok, error, warn
-import time
+import yaml
+import os
+import collections
 
 
 POSTGRES_DATA_MOUNT = '/var/lib/postgresql/data'
@@ -17,17 +19,27 @@ docker_image = 'postgres:9.4.0'
 host_data_directory = '/tmp/postgres'
 docker_port = 5432
 
+CONFIG_FILE = './tardis2.yml'
+
 
 @click.group()
 def cli():
     pass
 
 
+def load_configuration():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, 'rb') as fd:
+            return yaml.safe_load(fd)
+    else:
+        return dict()
+
+
 def dump_to_session_data(data):
     with open(session_file, 'w') as f:
         json.dump(data, f)
-
  
+
 def load_session_data():
   with open(session_file, 'r') as f:
         return json.load(f)
@@ -36,21 +48,52 @@ def load_session_data():
 def create_docker_client():
     return  Client(base_url='unix://var/run/docker.sock')
 
+
 @cli.command()
-@click.option('--docker_image', help='path to pull postgres docker image')
-def configure(docker_image):
+def configure():
     """
     Configure your local Postgres Docker image
-    
-    TODO
-	- postgres version
-	-port
-	-image pull
-	-data folder location
-	-config name
-    """
-    print('configure')
 
+    TODO
+    - postgres version
+    -port
+    -image pull
+    -data folder location
+    -config name
+    """
+
+    config = load_configuration()
+    travel_plan_name = click.prompt('travel plan name')
+
+    if not config:
+        config = dict()
+
+    if not travel_plan_name in config:
+        config[travel_plan_name] = dict()
+
+    config[travel_plan_name] = dict()
+
+    image = click.prompt('docker image', default='postgres')
+    tag = click.prompt('docker image tag', default='latest')
+
+    config[travel_plan_name]['image'] = image
+    config[travel_plan_name]['tag'] = tag
+    config[travel_plan_name]['db_user'] = click.prompt('DB user', default=POSTGRES_USER)
+    config[travel_plan_name]['db_password'] = click.prompt('DB password', default=POSTGRES_PASSWORD)
+    config[travel_plan_name]['db_port'] = click.prompt('DB port', default=5432)
+    config[travel_plan_name]['data_share'] = click.prompt('data share between host and Docker container')
+
+    click.echo('pulling  "{}:{}"...'.format(image,tag))
+    docker_client = create_docker_client()
+    docker_client.pull(repository=image, tag=tag)
+    ok('pulled "{}:{}"'.format(image,tag))
+
+    click.echo('saving travel plan "{}" to "{}"...'.format(travel_plan_name, CONFIG_FILE))
+
+    with open(CONFIG_FILE, 'w') as fd:
+        yaml.dump(config, fd, default_flow_style=False)
+    
+    ok('saved travel plan "{}" to "{}"'.format(travel_plan_name, CONFIG_FILE))
 
 
 # TODO error handling
@@ -182,17 +225,7 @@ def list():
 
 
 def main():
-    #pid = str(os.getpid())
-    # session_file = '.tardis.session.{}.pid'.format(pid)
-    
-    #with open(session_file, 'w') as f:
-    #    f.write('start')
-    #try:
     cli()
-    #except e:
-    #    print(e)
-    #    os.unlink(session_file)
-
 
 
 if __name__ == '__main__':

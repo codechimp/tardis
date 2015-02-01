@@ -2,3 +2,4 @@ click==3.3
 PyYAML==3.11
 gitpython==0.3.6
 docker-py==0.7.1
+PyYAML==3.11
