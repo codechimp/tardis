@@ -16,7 +16,7 @@ plan: database
 	git: git@github.com:codechimp/postgres-integration.git
 		checkpoint: initial setup  # current checkpoint
 - name: travel_plan_b-2014
-	type: zalando/postgres
+	type: company/postgres
 		version: 9.1
 	git: git@github.com:codechimp/postgres-data.git
 		checkpoint: live-dump
