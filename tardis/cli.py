@@ -100,7 +100,7 @@ def is_dirty():
 
 def init_git_repo_if_not_exists():
     if is_git_directory(host_data_directory):
-        warn('{} is already a GIT repo --> utilizing this repo'.format(host_data_directory))
+        click.echo('{} is already a GIT repo --> utilizing this repo'.format(host_data_directory))
     else:
         git.repo.base.Repo.init(path=host_data_directory)
         ok('initialized GIT repo in {}'.format(host_data_directory))
