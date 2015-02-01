@@ -61,7 +61,7 @@ def configure(docker_image):
 # TODO error handling
 @cli.command()
 @click.option('--config_path', help='path to tardis config file', default='.')
-def run(config_path):
+def run(config_path, recent_checkpoint = None):
     """
     Runs your local DB image according to tardis configuration
     """
@@ -71,7 +71,9 @@ def run(config_path):
     container = client.create_container(docker_image, environment = { 'POSTGRES_USER': POSTGRES_USER, 
                                                                       'POSTGRES_PASSWORD': POSTGRES_PASSWORD })
     container_id = container.get('Id')
-    dump_to_session_data({ 'container_id' : container_id })
+
+    dump_to_session_data({ 'container_id' :     container_id, 
+                           'recent_checkpoint': recent_checkpoint })
 
     response = client.start(container = container_id, 
                             binds = { 
@@ -83,7 +85,7 @@ def run(config_path):
                                     },
                             port_bindings = { 5432: docker_port } )
 
-    ok('started container {}'.format(container_id))
+    ok('started container "{}"'.format(container_id))
 
 
 def is_git_directory(dir):
@@ -100,10 +102,10 @@ def is_dirty():
 
 def init_git_repo_if_not_exists():
     if is_git_directory(host_data_directory):
-        click.echo('{} is already a GIT repo --> utilizing this repo'.format(host_data_directory))
+        click.echo('"{}" is already a GIT repo --> utilizing this repo'.format(host_data_directory))
     else:
         git.repo.base.Repo.init(path=host_data_directory)
-        ok('initialized GIT repo in {}'.format(host_data_directory))
+        ok('initialized GIT repo in "{}"'.format(host_data_directory))
 
 
 @cli.command()
@@ -122,17 +124,20 @@ def save(checkpoint):
 
         try:
             docker_client.pause(container_id)
-            ok('paused container {}'.format(container_id))
+            ok('paused container "{}"'.format(container_id))
             click.echo('repo has changed...')
             git_cmd = git.Git(host_data_directory)
             git_cmd.add('--all', host_data_directory)
             git_cmd.commit(message=checkpoint)
             git_cmd.tag('--annotate', checkpoint, message=checkpoint)
+
+            dump_to_session_data({ 'container_id':      container_id, 
+                                   'recent_checkpoint': checkpoint })
         except Exception as e:
             error(e)
         finally:
             docker_client.unpause(container_id)
-            ok("unpaused container {}".format(container_id))
+            ok('unpaused container "{}"'.format(container_id))
     else:
         warn('repo has not changed... -> no checkpoint was created')
 
@@ -149,24 +154,26 @@ def travel_to(ctx, checkpoint):
     container_id = session_data['container_id']
 
     docker_client.stop(container_id)
-    ok('stopped container {}'.format(container_id))
+    ok('stopped container "{}"'.format(container_id))
 
     git_cmd = git.Git(host_data_directory)
     git_cmd.checkout('--force','tags/{}'.format(checkpoint))
-    ok('travelled back to {}'.format(checkpoint))
+    ok('travelled back to "{}"'.format(checkpoint))
     
     # FIXME we need to reuse the same config path as we did in 'travis run'
-    ctx.invoke(run)
+    ctx.invoke(run, recent_checkpoint=checkpoint)
 
 
 
 
 @cli.command('travel-back')
-def travel_back():
+@click.pass_context
+def travel_back(ctx):
     """
     Sets DB state back to the recent checkpoint 
     """
-    print('travel-back ')
+    session_data = load_session_data()
+    ctx.invoke(travel_to, checkpoint=session_data['recent_checkpoint'])
 
 
 @cli.command()
@@ -177,8 +184,6 @@ def list():
     # TODO mark current checkpoint
     repo = git.repo.base.Repo(path=host_data_directory)
     [print(tag) for tag in repo.tags]
-
-
 
 
 def main():
