@@ -4,6 +4,7 @@ from docker.utils import kwargs_from_env
 import json
 import git
 from tardis.utils import ok, error, warn
+import time
 
 
 POSTGRES_DATA_MOUNT = '/var/lib/postgresql/data'
@@ -56,6 +57,7 @@ def configure(docker_image):
     print('configure')
 
 
+
 # TODO error handling
 @cli.command()
 @click.option('--config_path', help='path to tardis config file', default='.')
@@ -84,12 +86,24 @@ def run(config_path):
     ok('started container {}'.format(container_id))
 
 
+def is_git_directory(dir):
+    return git.repo.fun.is_git_dir(dir)
+
+
 def is_dirty():
     """
-    There is a is_dirty function in git-python but it seems that it is does not work properly
+    Checks if the current reposity has untracked or changed files
     """
     repo = git.repo.base.Repo(path=host_data_directory)
     return repo.is_dirty(untracked_files=True)
+
+
+def init_git_repo_if_not_exists():
+    if is_git_directory(host_data_directory):
+        warn('{} is already a GIT repo --> utilizing this repo'.format(host_data_directory))
+    else:
+        git.repo.base.Repo.init(path=host_data_directory)
+        ok('initialized GIT repo in {}'.format(host_data_directory))
 
 
 @cli.command()
@@ -98,17 +112,19 @@ def save(checkpoint):
     """
     Sets a checkpoint for the current DB state
     """
-    session_data = load_session_data()
-    docker_client = create_docker_client();
-    container_id = session_data['container_id']
-    
-    git_cmd = git.Git(host_data_directory)
-    
-    if is_dirty():      
+
+    init_git_repo_if_not_exists()
+
+    if is_dirty():
+        docker_client = create_docker_client()
+        session_data = load_session_data()
+        container_id = session_data['container_id']
+
         try:
             docker_client.pause(container_id)
             ok('paused container {}'.format(container_id))
             click.echo('repo has changed...')
+            git_cmd = git.Git(host_data_directory)
             git_cmd.add('--all', host_data_directory)
             git_cmd.commit(message=checkpoint)
             git_cmd.tag('--annotate', checkpoint, message=checkpoint)
