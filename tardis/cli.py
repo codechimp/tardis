@@ -35,9 +35,10 @@ def load_session_data():
 def create_docker_client():
     # c = Client(base_url='unix://var/run/docker.sock')
     # worakaround for boot2docker
-    kwargs = kwargs_from_env()
-    kwargs['tls'].assert_hostname = False
-    return Client(**kwargs)
+    #kwargs = kwargs_from_env()
+    #kwargs['tls'].assert_hostname = False
+    #return Client(**kwargs)
+    return  Client(base_url='unix://var/run/docker.sock')
 
 @cli.command()
 @click.option('--docker_image', help='path to pull postgres docker image')
@@ -88,7 +89,7 @@ def is_dirty():
     There is a is_dirty function in git-python but it seems that it is does not work properly
     """
     repo = git.repo.base.Repo(path=host_data_directory)
-    return len(repo.untracked_files) != 0
+    return repo.is_dirty(untracked_files=True)
 
 
 @cli.command()
@@ -114,7 +115,7 @@ def save(checkpoint):
         except Exception as e:
             error(e)
         finally:
-            docker_client.pause(container_id)
+            docker_client.unpause(container_id)
             ok("unpaused container {}".format(container_id))
     else:
         warn('repo has not changed... -> no checkpoint was created')
@@ -135,6 +136,7 @@ def travel_to(ctx, checkpoint):
     ok('stopped container {}'.format(container_id))
 
     git_cmd = git.Git(host_data_directory)
+    git_cmd.checkout('--', host_data_directory)
     git_cmd.checkout('tags/{}'.format(checkpoint))
     ok('travelled back to {}'.format(checkpoint))
     
