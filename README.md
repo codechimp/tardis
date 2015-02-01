@@ -2,6 +2,14 @@
 
 WORK IS IN PROGRESS!!!
 
+`tardis` is a tool to handle the state of your test DB in an efficent way. You can create checkpoints for your DB state to `travel` to them back and forth.
+
+`tardis` is based on 
+- `Docker` to launch DB containers. See [Docker repository](https://registry.hub.docker.com/_/postgres/) for currently supported images
+- `GIT` to create the checkpoints and to `travel` from one to another
+
+# Setup
+
 ```shell
 $ sudo pip3 install -r requirements.txt
 $ python3 -m tardis
