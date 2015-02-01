@@ -34,11 +34,6 @@ def load_session_data():
 
 
 def create_docker_client():
-    # c = Client(base_url='unix://var/run/docker.sock')
-    # worakaround for boot2docker
-    #kwargs = kwargs_from_env()
-    #kwargs['tls'].assert_hostname = False
-    #return Client(**kwargs)
     return  Client(base_url='unix://var/run/docker.sock')
 
 @cli.command()
