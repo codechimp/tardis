@@ -136,8 +136,7 @@ def travel_to(ctx, checkpoint):
     ok('stopped container {}'.format(container_id))
 
     git_cmd = git.Git(host_data_directory)
-    git_cmd.checkout('--', host_data_directory)
-    git_cmd.checkout('tags/{}'.format(checkpoint))
+    git_cmd.checkout('--force','tags/{}'.format(checkpoint))
     ok('travelled back to {}'.format(checkpoint))
     
     # FIXME we need to reuse the same config path as we did in 'travis run'
